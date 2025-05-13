@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filename Generator</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --bg: #f4f6f8;
+      --input-bg: white;
+      --border: #ccc;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 5px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      font-weight: bold;
+      border: none;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #iulaan-section {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: var(--radius);
+      display: none;
+    }
+
+    #filename-output {
+      margin-top: 15px;
+    }
+
+    #modalOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center; align-items: center;
+    }
+
+    #defaultsModal {
+      background: white; padding: 20px; border-radius: var(--radius); min-width: 320px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Filename Generator</h2>
+    <label>Date:
+      <input type="date" id="dateInput" />
+    </label>
+    <input type="text" id="dateFormatted" disabled />
+
+    <label>Type:
+      <select id="typeInput">
+        <option value="">-- Select --</option>
+        <option value="job">job</option>
+        <option value="notice">notice</option>
+      </select>
+    </label>
+
+    <label>Description Text:
+      <input type="text" id="descriptionInput" />
+    </label>
+
+    <label><input type="checkbox" id="iulaanCheck" /> Is an iulaan</label>
+
+    <div id="iulaan-section">
+      <label>IUL Prefix Display:
+        <input type="text" id="prefixDisplay" value="88" />
+      </label>
+      <label>Department:
+        <input type="text" id="departmentInput" />
+      </label>
+      <label>Prefix:
+        <input type="text" id="prefixInput" value="88" />
+      </label>
+      <label>Year:
+        <input type="text" id="yearInput" value="2025" />
+      </label>
+      <label>Number:
+        <input type="text" id="numberInput" />
+      </label>
+    </div>
+
+    <label>End Text:
+      <input type="text" id="endTextInput" />
+    </label>
+
+    <button onclick="generateFilename()">Generate Filename</button>
+    <button onclick="openDefaultsModal()">Set Defaults</button>
+
+    <input type="text" id="filenameOutput" readonly />
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalOverlay">
+    <div id="defaultsModal">
+      <h3>Set Default Values</h3>
+      <label>IUL Prefix:
+        <input type="text" id="modalPrefixDisplay" />
+      </label>
+      <label>Prefix:
+        <input type="text" id="modalPrefixInput" />
+      </label>
+      <label>Year:
+        <input type="text" id="modalYearInput" />
+      </label>
+      <br />
+      <button onclick="confirmDefaults()">Confirm</button>
+      <button onclick="closeDefaultsModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    window.onload = () => {
+      const defaults = JSON.parse(localStorage.getItem('filenameDefaults')) || {};
+      document.getElementById('prefixInput').value = defaults.prefix || '88';
+      document.getElementById('yearInput').value = defaults.year || '2025';
+      document.getElementById('typeInput').value = defaults.type || '';
+      document.getElementById('departmentInput').value = defaults.department || '';
+      document.getElementById('prefixDisplay').value = defaults.prefixDisplay || '88';
+
+      const date = new Date('2025-05-12');
+      document.getElementById('dateInput').valueAsDate = date;
+      document.getElementById('dateFormatted').value = formatDate(date);
+    };
+
+    document.getElementById('dateInput').addEventListener('change', (e) => {
+      document.getElementById('dateFormatted').value = formatDate(new Date(e.target.value));
+    });
+
+    document.getElementById('iulaanCheck').addEventListener('change', (e) => {
+      document.getElementById('iulaan-section').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    function formatDate(date) {
+      return date.toISOString().slice(0, 10).replace(/-/g, '');
+    }
+
+    function generateFilename() {
+      const date = document.getElementById('dateFormatted').value;
+      const type = document.getElementById('typeInput').value;
+      const description = document.getElementById('descriptionInput').value.replaceAll(' ', '-').toLowerCase();
+      const endText = document.getElementById('endTextInput').value;
+      let filename = `${date}-${type}`;
+
+      if (document.getElementById('iulaanCheck').checked) {
+        const prefix = document.getElementById('prefixInput').value;
+        const prefixDisplay = document.getElementById('prefixDisplay').value;
+        const department = document.getElementById('departmentInput').value;
+        const year = document.getElementById('yearInput').value;
+        const number = document.getElementById('numberInput').value;
+        filename += `-iul-${prefixDisplay}-${department}-${prefix}-${year}-${number}`;
+      }
+
+      if (description) filename += `-${description}`;
+      if (endText) filename += `-${endText}`;
+
+      document.getElementById('filenameOutput').value = filename;
+    }
+
+    function copyToClipboard() {
+      const output = document.getElementById('filenameOutput');
+      output.select();
+      output.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+    }
+
+    function openDefaultsModal() {
+      document.getElementById('modalOverlay').style.display = 'flex';
+      document.getElementById('modalPrefixDisplay').value = document.getElementById('prefixDisplay').value;
+      document.getElementById('modalPrefixInput').value = document.getElementById('prefixInput').value;
+      document.getElementById('modalYearInput').value = document.getElementById('yearInput').value;
+    }
+
+    function closeDefaultsModal() {
+      document.getElementById('modalOverlay').style.display = 'none';
+    }
+
+    function confirmDefaults() {
+      const newPrefixDisplay = document.getElementById('modalPrefixDisplay').value;
+      const newPrefix = document.getElementById('modalPrefixInput').value;
+      const newYear = document.getElementById('modalYearInput').value;
+
+      document.getElementById('prefixDisplay').value = newPrefixDisplay;
+      document.getElementById('prefixInput').value = newPrefix;
+      document.getElementById('yearInput').value = newYear;
+
+      const defaults = {
+        prefixDisplay: newPrefixDisplay,
+        prefix: newPrefix,
+        year: newYear,
+        type: document.getElementById('typeInput').value,
+        department: document.getElementById('departmentInput').value
+      };
+      localStorage.setItem('filenameDefaults', JSON.stringify(defaults));
+      closeDefaultsModal();
+      alert('Defaults saved.');
+    }
+  </script>
+</body>
+</html>
