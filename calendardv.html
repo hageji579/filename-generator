@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Cropped Iframe Export</title>
+<style>
+    body {
+        margin: 0;
+        background: #fff;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    /* Responsive crop box */
+    .crop-box {
+        width: 100%;
+        max-width: 694px;               /* Original width */
+        aspect-ratio: 694 / 532;        /* Original height */
+        border: 2px solid #ccc;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* Wrapper that will be scaled */
+    .iframe-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;                  /* Original iframe width */
+        height: 2000px;                 /* Original iframe height */
+        transform-origin: top left;
+    }
+
+    .iframe-wrapper iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    /* SCALE CALCULATION
+       scale = available_width / original_crop_width (694px)
+    */
+    @media (max-width: 694px) {
+        .iframe-wrapper {
+            transform: scale(calc(100vw / 694)) translate(-678px, -82px);
+        }
+    }
+
+    /* Full size — no scaling */
+    @media (min-width: 695px) {
+        .iframe-wrapper {
+            transform: translate(-678px, -82px);
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="crop-box">
+    <div class="iframe-wrapper">
+        <iframe src="https://dhivehi.mv/calendar/"></iframe>
+    </div>
+</div>
+
+</body>
+</html>
